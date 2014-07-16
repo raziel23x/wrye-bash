@@ -794,6 +794,7 @@ class Save_RepairFactions(EnabledLink): # CRUFT
                     if recId == 7:
                         playerStartSpell = saveFile.getIref(0x00000136)
                         if npc.spells is not None and playerStartSpell not in npc.spells:
+                            # TODO(ut): too few args for string format
                             log(u'. %08X %s -- **%s**' % (recId,eid._(u'DefaultPlayerSpell')))
                             npc.spells.append(playerStartSpell)
                             refactioned = True #--I'm lying, but... close enough.

@@ -894,6 +894,7 @@ class PluggyFile:
             self.version, = unpack('I',4)
             #--Reject versions earlier than 1.02
             if self.version < 0x01020000:
+                # TODO(ut): too few args for string format
                 raise FileError(self.name,u'Unsupported file verson: %I' % self.version)
             #--Plugins
             self.plugins = []
