@@ -43,7 +43,7 @@ liblo = None
 version = None
 
 # Version of libloadorder this Python script is written for.
-PythonLibloVersion = (4,0)
+PythonLibloVersion = (6,0)
 
 DebugLevel = 0
 # DebugLevel
@@ -161,6 +161,7 @@ def Init(path):
     for name in ['OK',
                  'WARN_BAD_FILENAME',
                  'WARN_LO_MISMATCH',
+                 'WARN_INVALID_LIST',
                  'ERROR_FILE_READ_FAIL',
                  'ERROR_FILE_WRITE_FAIL',
                  'ERROR_FILE_RENAME_FAIL',
@@ -229,6 +230,7 @@ def Init(path):
     # =========================================================================
     ## unsigned int lo_get_version(unsigned int * const versionMajor, unsigned int * const versionMinor, unsigned int * const versionPatch)
     _Clo_get_version = liblo.lo_get_version
+    _Clo_get_version.restype = LibloErrorCheck
     _Clo_get_version.argtypes = [c_uint_p, c_uint_p, c_uint_p]
     global version
     try:
@@ -247,7 +249,7 @@ def Init(path):
     ## unsigned int lo_create_handle(lo_game_handle * const gh, const unsigned int gameId, const char * const gamePath);
     _Clo_create_handle = liblo.lo_create_handle
     _Clo_create_handle.restype = LibloErrorCheck
-    _Clo_create_handle.argtypes = [lo_game_handle_p, c_uint, c_char_p]
+    _Clo_create_handle.argtypes = [lo_game_handle_p, c_uint, c_char_p, c_char_p]
     ## void lo_destroy_handle(lo_game_handle gh);
     _Clo_destroy_handle = liblo.lo_destroy_handle
     _Clo_destroy_handle.restype = None
@@ -288,7 +290,6 @@ def Init(path):
     # =========================================================================
     # API Functions - Active Plugins
     # =========================================================================
-
     ## unsigned int lo_get_active_plugins(lo_game_handle gh, char *** const plugins, size_t * const numPlugins);
     _Clo_get_active_plugins = liblo.lo_get_active_plugins
     _Clo_get_active_plugins.restype = LibloErrorCheck
@@ -307,10 +308,18 @@ def Init(path):
     _Clo_get_plugin_active.argtypes = [lo_game_handle, c_char_p, c_bool_p]
 
     # =========================================================================
+    # API Functions - Misc
+    # =========================================================================
+    # unsigned int lo_fix_plugin_lists(lo_game_handle gh);
+    _Clo_fix_plugin_lists = liblo.lo_fix_plugin_lists
+    _Clo_fix_plugin_lists.restype = LibloErrorCheck
+    _Clo_fix_plugin_lists.argtypes = [lo_game_handle]
+
+    # =========================================================================
     # Class Wrapper
     # =========================================================================
     class LibloHandle(object):
-        def __init__(self,gamePath,game='Oblivion'):
+        def __init__(self,gamePath,game='Oblivion',userPath=None):
             """ game can be one of the LIBLO_GAME_*** codes, or one of the
                 aliases defined above in the 'games' dictionary."""
             if isinstance(game,basestring):
@@ -320,7 +329,7 @@ def Init(path):
                     raise Exception('Game "%s" is not recognized' % game)
             self._DB = lo_game_handle()
             try:
-                _Clo_create_handle(byref(self._DB),game,_enc(gamePath))
+                _Clo_create_handle(byref(self._DB),game,_enc(gamePath),userPath)
             except LibloError as err:
                 if err.args[0].startswith("LIBLO_WARN_LO_MISMATCH"):
                     # If there is a Mismatch between loadorder.txt and plugns.txt finish initialization

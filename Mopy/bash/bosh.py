@@ -5304,7 +5304,7 @@ class ConfigHelpers:
         lootDb = loot.LootDb(dirs['app'].s,bush.game.fsName)
 
         global lo
-        lo = liblo.LibloHandle(dirs['app'].s,bush.game.fsName)
+        lo = liblo.LibloHandle(dirs['app'].s,bush.game.fsName,dirs['userApp'].s)
         if bush.game.fsName == u'Oblivion' and dirs['mods'].join(u'Nehrim.esm').isfile():
             lo.SetGameMaster(u'Nehrim.esm')
         liblo.RegisterCallback(liblo.LIBLO_WARN_LO_MISMATCH,
