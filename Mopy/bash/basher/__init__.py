@@ -411,7 +411,7 @@ class List(wx.Panel):
         #--Populate items
         for itemDex in xrange(len(self.items)):
             mode = int(itemDex >= listItemCount)
-            self.PopulateItem(itemDex,mode,selected)
+            self.PopulateItem(itemDex,mode,selected) # (ut) takes time
         #--Delete items?
         while self.list.GetItemCount() > len(self.items):
             self.list.DeleteItem(self.list.GetItemCount()-1)
@@ -1662,7 +1662,7 @@ class ModDetails(SashPanel):
             #--Remember values for edit checks
             self.fileStr = modInfo.name.s
             self.authorStr = modInfo.header.author
-            self.modifiedStr = formatDate(modInfo.mtime)
+            self.modifiedStr = formatDate(modInfo.mtime) # (ut) too much work
             self.descriptionStr = modInfo.header.description
             self.versionStr = u'v%0.2f' % modInfo.header.version
             tagsStr = u'\n'.join(sorted(modInfo.getBashTags()))

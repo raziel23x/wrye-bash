@@ -3108,7 +3108,7 @@ class Plugins:
         if hasChanged or forceRefresh:
             self.loadActive()
             self.loadLoadOrder()
-        return hasChanged
+        return hasChanged # (ut) this is true when I switch back and forth from Bash (no changes !) - why ?
 
     def fixLoadOrder(self):
         """Fix inconsistencies between plugins.txt, loadorder.txt and actually installed mod files as well as impossible load orders"""
@@ -3129,6 +3129,7 @@ class Plugins:
             else:
                 self.addMods([mod])
         # Check to see if any esm files are loaded below an esp and reorder as neccessar
+        # (ut) this should be taken care of some other place !
         for mod in self.LoadOrder[indexFirstEsp:]:
             if modInfos.data[mod].isEsm():
                 self.LoadOrder.remove(mod)
