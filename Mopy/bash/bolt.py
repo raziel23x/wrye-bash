@@ -983,7 +983,12 @@ class Path(object):
         if isinstance(other,Path):
             return cmp(self._cs, other._cs)
         else:
-            return cmp(self._cs, Path.getCase(other))
+            # inline getCase to avoid duplicate `if isinstance(name,Path): return name._cs`
+            # if not other: return other # ... if other else other below - check cmp
+            # getCase: expects other to be either Path or str (...)
+            # elif isinstance(other,str): other = _unicode(other)
+            # return os.path.normcase(os.path.normpath(_unicode(other)))
+            return cmp(self._cs, os.path.normcase(os.path.normpath(_unicode(other))) if other else other)
 
 # Util Constants --------------------------------------------------------------
 #--Unix new lines
