@@ -3011,9 +3011,9 @@ class Plugins:
         if move.exists():
             move.copyTo(self.pathOrder)
 
-    def loadActive(self):
+    def loadActive(self, lo_with_corrected_master=None):
         """Get list of active plugins from plugins.txt through libloadorder which cleans out bad entries."""
-        self.selected = lo.GetActivePlugins() # GPath list (but not sorted)
+        self.selected = lo.GetActivePlugins(lo_with_corrected_master=lo_with_corrected_master) # GPath list (but not sorted)
         if self.pathPlugins.exists():
             self.mtimePlugins = self.pathPlugins.mtime
             self.sizePlugins = self.pathPlugins.size
@@ -3023,7 +3023,10 @@ class Plugins:
 
 
     def loadLoadOrder(self):
-        """Get list of all plugins from loadorder.txt through libloadorder."""
+        """Get list of all plugins from loadorder.txt through libloadorder.
+
+        Apparently will correct the master's position if >0.
+        """
         self.LoadOrder = lo.GetLoadOrder()
         # game's master might be out of place (if using timestamps for load ordering) so move it up.
         if self.LoadOrder.index(modInfos.masterName) > 0:
@@ -3032,9 +3035,10 @@ class Plugins:
         if lo.LoadOrderMethod == liblo.LIBLO_METHOD_TEXTFILE and self.pathOrder.exists():
             self.mtimeOrder = self.pathOrder.mtime
             self.sizeOrder = self.pathOrder.size
-            if self.selected != modInfos.getOrdered(self.selected,False):
+            ordered = modInfos.getOrdered(self.selected, False)  # (ut) getOrdered again !
+            if self.selected != ordered:
                 modInfos.plugins.saveLoadOrder()
-                self.selected = modInfos.getOrdered(self.selected,False)
+                self.selected = ordered
                 deprint("Mismatched Load Order Corrected")
 
     def save(self):
@@ -3106,8 +3110,8 @@ class Plugins:
         """Reload for plugins.txt or masterlist.txt changes."""
         hasChanged = self.hasChanged()
         if hasChanged or forceRefresh:
-            self.loadActive()
             self.loadLoadOrder()
+            self.loadActive(lo_with_corrected_master=self.LoadOrder)
         return hasChanged # (ut) this is true when I switch back and forth from Bash (no changes !) - why ?
 
     def fixLoadOrder(self):
@@ -4075,11 +4079,7 @@ class FileInfos(DataDict):
             names |= {x for x in self.dir.list() if self.dir.join(x).isfile() and self.rightFileType(x)}
         names = list(names)
         names.sort(key=lambda x: x.cext == u'.ghost')
-        for name in names:
-            if self.dirdef and not self.dir.join(name).isfile():
-                fileInfo = self.factory(self.dirdef,name)
-            else:
-                fileInfo = self.factory(self.dir,name)
+        for fileInfo in map(lambda x: self.factory(self.dirdef,x) if self.dirdef and not self.dir.join(x).isfile() else self.factory(self.dir,x), names):
             name = fileInfo.name #--Might have '.ghost' lopped off.
             if name in newNames: continue #--Must be a ghost duplicate. Ignore it.
             oldInfo = self.data.get(name)
