@@ -3021,6 +3021,13 @@ class Plugins:
             self.mtimePlugins = 0
             self.sizePlugins = 0
 
+    def loDict(self):
+        """Hack to cache the load order mapped to its indexes - speeds up
+        getOrdered by n^2.
+
+        See: http://stackoverflow.com/a/26644244/281545
+        """
+        return dict(zip(self.LoadOrder, range(len(self.LoadOrder))))
 
     def loadLoadOrder(self):
         """Get list of all plugins from loadorder.txt through libloadorder.
@@ -3319,7 +3326,7 @@ class FileInfo:
         else:
             return 0
 
-    def getStatus(self):
+    def getStatus(self, dataDict=None):
         """Returns status of this file -- which depends on status of masters.
         0:  Good
         10: Out of order master
@@ -3333,7 +3340,7 @@ class FileInfo:
         if status == 30:
             return status
         #--Misordered?
-        self.masterOrder = modInfos.getOrdered(self.masterNames)
+        self.masterOrder = modInfos.getOrdered(self.masterNames, dataDict=dataDict)
         if self.masterOrder != self.masterNames:
             return 20
         else:
@@ -4761,13 +4768,16 @@ class ModInfos(FileInfos):
                 return True
         return False
 
-    def getOrdered(self,modNames,asTuple=True):
-        """Sort list of mod names into their load order."""
+    def getOrdered(self,modNames,asTuple=True,dataDict=None):
+        """Sort list of mod names into their load order."""  # FIXME: slow !!!!
         modNames = list(modNames)
         try:
-            #modNames.sort()          # CDC Why a default sort? We want them in load order!  Is try even needed?
-            data = self.plugins.LoadOrder
-            modNames.sort(key=lambda a: (a in data) and data.index(a)) #--Sort on masterlist load order
+            if dataDict:
+                modNames.sort(key=lambda a: dataDict.get(a, sys.maxint))
+            else:
+                #modNames.sort()          # CDC Why a default sort? We want them in load order!  Is try even needed?
+                data = self.plugins.LoadOrder
+                modNames.sort(key=lambda a: (a in data) and data.index(a)) #--Sort on masterlist load order
         except:
             deprint(u'Error sorting modnames:',modNames,traceback=True)
             raise
