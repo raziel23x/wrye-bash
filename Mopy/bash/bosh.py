@@ -3032,7 +3032,7 @@ class Plugins:
         if self.LoadOrder.index(modInfos.masterName) > 0:
             self.LoadOrder.remove(modInfos.masterName)
             self.LoadOrder.insert(0,modInfos.masterName)
-        if lo.LoadOrderMethod == liblo.LIBLO_METHOD_TEXTFILE and self.pathOrder.exists():
+        if lo.LoadOrderMethod == liblo.LIBLO_METHOD_TEXTFILE and self.pathOrder.exists(): # (ut) meaning ?
             self.mtimeOrder = self.pathOrder.mtime
             self.sizeOrder = self.pathOrder.size
             ordered = modInfos.getOrdered(self.selected, False)  # (ut) getOrdered again !
@@ -4308,7 +4308,7 @@ class ModInfos(FileInfos):
         return dirs['modsBash']
 
     #--Refresh-----------------------------------------------------------------
-    def canSetTimes(self):
+    def canSetTimes(self): # (ut) called 3 times - why ? takes time due to exists() (?)
         """Returns a boolean indicating if mtime setting is allowed."""
         self.lockLO = settings['bosh.modInfos.resetMTimes']
         self.fullBalo = settings.get('bash.balo.full',False)

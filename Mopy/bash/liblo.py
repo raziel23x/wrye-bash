@@ -513,7 +513,10 @@ def Init(path):
             plugins = c_char_p_p()
             num = c_size_t()
             _Clo_get_active_plugins(self._DB, byref(plugins), byref(num))
-            return self.GetOrdered([GPath(_uni(plugins[i])) for i in xrange(num.value)])
+            # (ut) plugins (a char**) should not contain None so dropped the
+            # call to _uni - GPath will take care of this (actually calls
+            # chardet which may add some overhead - hmm)
+            return self.GetOrdered([GPath(plugins[i]) for i in xrange(num.value)], selfLoadOrder=lo_with_corrected_master)
         def _GetActivePlugins(self):
             ret = self.ActivePluginsList(self.GetActivePlugins())
             ret.SetHandle(self)
@@ -550,7 +553,7 @@ def Init(path):
                 self.SetPluginActive(plugin,False)
 
         def GetOrdered(self,plugins,selfLoadOrder=None):
-            """Returns a list of the given plugins, sorted accoring to their
+            """Returns a list of the given plugins, sorted according to their
                load order"""
             selfLoadOrder = selfLoadOrder if selfLoadOrder else self.LoadOrder
             return [x for x in selfLoadOrder if x in plugins]

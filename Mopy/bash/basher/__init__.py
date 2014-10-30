@@ -1283,7 +1283,7 @@ class ModList(List):
     def PopulateItem(self,itemDex,mode=0,selected=set()):
         #--String name of item?
         if not isinstance(itemDex,int):
-            itemDex = self.items.index(itemDex)
+            itemDex = self.items.index(itemDex) # (ut) calls __cmp__
         fileName = GPath(self.items[itemDex])
         fileInfo = self.data[fileName]
         fileBashTags = bosh.modInfos[fileName].getBashTags()
@@ -1327,7 +1327,7 @@ class ModList(List):
         #--Default message
         mouseText = u''
         #--Image
-        status = fileInfo.getStatus()
+        status = fileInfo.getStatus() # (ut) calls Getordered
         checkMark = (
             1 if fileName in bosh.modInfos.ordered
             else 2 if fileName in bosh.modInfos.merged
@@ -5144,7 +5144,7 @@ class BashFrame(wx.Frame):
             with balt.Progress(_(u'Mark Mergeable')+u' '*30) as progress:
                 progress.setFull(len(scanList))
                 bosh.modInfos.rescanMergeable(scanList,progress)
-        if scanList or difMergeable:
+        if scanList or difMergeable: # (ut) modList.RefreshUI called twice on Bash init !!!!!
             modList.RefreshUI(scanList + list(difMergeable))
         #--Done (end recursion blocker)
         self.inRefreshData = False
