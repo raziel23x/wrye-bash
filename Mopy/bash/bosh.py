@@ -4497,7 +4497,7 @@ class ModInfos(FileInfos):
     def refreshInfoLists(self):
         """Refreshes various mod info lists (mtime_mods, mtime_selected, exGroup_mods, imported, exported."""
         #--Ordered
-        self.ordered = self.getOrdered(self.plugins.selected)
+        self.ordered = self.getOrdered(self.plugins.selected, dataDict=self.plugins.loDict())
         #--Mod mtimes
         mtime_mods = self.mtime_mods
         mtime_mods.clear()
