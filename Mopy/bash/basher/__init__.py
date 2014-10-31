@@ -291,7 +291,7 @@ class SashTankPanel(SashPanel):
 #------------------------------------------------------------------------------
 class List(wx.Panel):
     def __init__(self,parent,id=wx.ID_ANY,ctrlStyle=wx.LC_REPORT|wx.LC_SINGLE_SEL,
-                 dndFiles=False,dndList=False,dndColumns=[]):
+                 dndFiles=False,dndList=False,dndColumns=[],dataDict=None):
         wx.Panel.__init__(self,parent,id, style=wx.WANTS_CHARS)
         sizer = wx.BoxSizer(wx.VERTICAL)
         self.SetSizer(sizer)
@@ -309,11 +309,20 @@ class List(wx.Panel):
         self.mouseTexts = {}
         self.mouseTextPrev = u''
         self.vScrollPos = 0
+        # (ut) BELOW TILL ....
         #--Columns
         self.PopulateColumns()
         #--Items
         self.sortDirty = 0
-        self.PopulateItems()
+        self.PopulateItems(dataDict=dataDict) # (ut) this called AFTER refresh is already called
+        #  once due to bosh.modInfos.refresh(doAutoGroup=True)! call stack:
+        # __init__, basher.py:880  (this line)
+        # __init__, basher.py:1787
+        # __init__, basher.py:2761
+        # __init__, basher.py:5140
+        # __init__, basher.py:5473
+        # Init, basher.py:6653
+        # .... MOVED TO SUBCLASS ?
         #--Events
         wx.EVT_SIZE(self, self.OnSize)
         #--Events: Items
@@ -410,7 +419,7 @@ class List(wx.Panel):
         if selected == 'SAME': selected = set(self.GetSelected())
         #--Reget items
         self.GetItems()
-        self.SortItems(col,reverse)
+        self.SortItems(col,reverse,dataDict=dataDict)
         #--Delete Current items
         listItemCount = self.list.GetItemCount()
         #--Populate items
@@ -786,7 +795,7 @@ class MasterList(List):
         self.SelectItemAtIndex(itemDex, masterName in selected)
 
     #--Sort Items
-    def SortItems(self,col=None,reverse=-2):
+    def SortItems(self,col=None,reverse=-2,dataDict=None):
         (col, reverse) = self.GetSortSettings(col,reverse)
         #--Sort
         data = self.data
@@ -1029,7 +1038,7 @@ class INIList(List):
         self.list.SetItem(item)
         self.SelectItemAtIndex(itemDex, fileName in selected)
 
-    def SortItems(self,col=None,reverse=-2):
+    def SortItems(self,col=None,reverse=-2,dataDict=None):
         (col, reverse) = self.GetSortSettings(col,reverse)
         settings['bash.ini.sort'] = col
         data = self.data
@@ -1218,7 +1227,7 @@ class ModList(List):
         self.mainMenu = ModList.mainMenu
         self.itemMenu = ModList.itemMenu
         #--Parent init
-        List.__init__(self,parent,wx.ID_ANY,ctrlStyle=wx.LC_REPORT, dndList=True, dndColumns=['Load Order'])#|wx.SUNKEN_BORDER))
+        List.__init__(self,parent,wx.ID_ANY,ctrlStyle=wx.LC_REPORT, dndList=True, dndColumns=['Load Order'], dataDict=data.plugins.loDict())#|wx.SUNKEN_BORDER))
         #--Image List
         checkboxesIL = colorChecks.GetImageList()
         self.sm_up = checkboxesIL.Add(balt.SmallUpArrow.GetBitmap())
@@ -1426,7 +1435,7 @@ class ModList(List):
         #--Status bar text
 
     #--Sort Items
-    def SortItems(self,col=None,reverse=-2):
+    def SortItems(self,col=None,reverse=-2,dataDict=None):
         (col, reverse) = self.GetSortSettings(col,reverse)
         oldcol = settings['bash.mods.sort']
         settings['bash.mods.sort'] = col
@@ -1446,7 +1455,7 @@ class ModList(List):
         elif col == 'Installer':
             self.items.sort(key=lambda a: bosh.modInfos.table.getItem(a,'installer',u''))
         elif col == 'Load Order':
-            self.items = bosh.modInfos.getOrdered(self.items,False)
+            self.items = bosh.modInfos.getOrdered(self.items,asTuple=False,dataDict=dataDict)
         elif col == 'Modified':
             self.items.sort(key=lambda a: data[a].getPath().mtime)
         elif col == 'Size':
@@ -2355,7 +2364,7 @@ class SaveList(List):
         self.SelectItemAtIndex(itemDex, fileName in selected)
 
     #--Sort Items
-    def SortItems(self,col=None,reverse=-2):
+    def SortItems(self,col=None,reverse=-2,dataDict=None):
         (col, reverse) = self.GetSortSettings(col,reverse)
         settings['bash.saves.sort'] = col
         data = self.data
@@ -3742,7 +3751,7 @@ class ScreensList(List):
         self.SelectItemAtIndex(itemDex, fileName in selected)
 
     #--Sort Items
-    def SortItems(self,col=None,reverse=-2):
+    def SortItems(self,col=None,reverse=-2,dataDict=None):
         (col, reverse) = self.GetSortSettings(col,reverse)
         settings['bash.screens.sort'] = col
         data = self.data
@@ -3919,7 +3928,7 @@ class BSAList(List):
         self.SelectItemAtIndex(itemDex, fileName in selected)
 
     #--Sort Items
-    def SortItems(self,col=None,reverse=-2):
+    def SortItems(self,col=None,reverse=-2,dataDict=None):
         (col, reverse) = self.GetSortSettings(col,reverse)
         settings['bash.BSAs.sort'] = col
         data = self.data
@@ -4221,7 +4230,7 @@ class MessageList(List):
         self.SelectItemAtIndex(itemDex, item in selected)
 
     #--Sort Items
-    def SortItems(self,col=None,reverse=-2):
+    def SortItems(self,col=None,reverse=-2,dataDict=None):
         (col, reverse) = self.GetSortSettings(col,reverse)
         settings['bash.messages.sort'] = col
         data = self.data
