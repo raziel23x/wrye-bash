@@ -1288,7 +1288,7 @@ class ModList(List):
         bashFrame.SetStatusCount()
         #--Saves
         if refreshSaves and saveList:
-            saveList.RefreshUI()
+            saveList.RefreshUI(dataDict=dataDict)
 
     #--Populate Item
     def PopulateItem(self,itemDex,mode=0,selected=set(),dataDict=None):
@@ -2296,8 +2296,12 @@ class SaveList(List):
         bosh.saveInfos.refresh()
         self.RefreshUI()
 
-    def RefreshUI(self,files='ALL',detail='SAME'):
-        """Refreshes UI for specified files."""
+    def RefreshUI(self,files='ALL',detail='SAME',dataDict=None):
+        """Refreshes UI for specified files.
+
+        Try to pass dataDict in - will save a lot of performance - see
+        Plugins.loDict().
+        """
         #--Details
         if detail == 'SAME':
             selected = set(self.GetSelected())
@@ -2305,12 +2309,12 @@ class SaveList(List):
             selected = {detail}
         #--Populate
         if files == 'ALL':
-            self.PopulateItems(selected=selected)
+            self.PopulateItems(selected=selected, dataDict=dataDict)
         elif isinstance(files,bolt.Path):
-            self.PopulateItem(files,selected=selected)
+            self.PopulateItem(files,selected=selected, dataDict=dataDict)
         else: #--Iterable
             for file in files:
-                self.PopulateItem(file,selected=selected)
+                self.PopulateItem(file,selected=selected, dataDict=dataDict)
         saveDetails.SetFile(detail)
         bashFrame.SetStatusCount()
 
@@ -2344,7 +2348,7 @@ class SaveList(List):
             else:
                 self.list.SetStringItem(itemDex, colDex, value)
         #--Image
-        status = fileInfo.getStatus()
+        status = fileInfo.getStatus(dataDict=dataDict)
         on = fileName.cext == u'.ess'
         self.list.SetItemImage(itemDex,self.checkboxes.Get(status,on))
         #--Selection State

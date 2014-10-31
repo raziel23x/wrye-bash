@@ -3778,7 +3778,7 @@ class INIInfo(FileInfo):
     def getHeader(self):
         pass
 
-    def getStatus(self):
+    def getStatus(self, dataDict=None):
         """Returns status of the ini tweak:
         20: installed (green with check)
         15: mismatches (green with dot) - mismatches are with another tweak from same installer that is applied
@@ -3935,8 +3935,8 @@ class SaveInfo(FileInfo):
         """Returns modInfos or saveInfos depending on fileInfo type."""
         return saveInfos
 
-    def getStatus(self):
-        status = FileInfo.getStatus(self)
+    def getStatus(self, dataDict=None):
+        status = FileInfo.getStatus(self, dataDict=dataDict)
         masterOrder = self.masterOrder
         #--File size?
         if status > 0 or len(masterOrder) > len(modInfos.ordered):
