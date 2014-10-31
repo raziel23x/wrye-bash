@@ -402,7 +402,7 @@ def Init(path):
             plugins = c_char_p_p()
             num = c_size_t()
             _Clo_get_load_order(self._DB, byref(plugins), byref(num))
-            return [GPath(_uni(plugins[i])) for i in xrange(num.value)]
+            return map(lambda i: GPath(plugins[i]), xrange(num.value))
         def _GetLoadOrder(self):
             ret = self.LoadOrderList(self.GetLoadOrder())
             ret.SetHandle(self)
@@ -427,7 +427,7 @@ def Init(path):
         def GetIndexedPlugin(self, index):
             plugin = c_char_p()
             _Clo_get_indexed_plugin(self._DB,index,byref(plugin))
-            return GPath(_uni(plugin.value))
+            return GPath(plugin.value)
 
         # ---------------------------------------------------------------------
         # Active plugin management
