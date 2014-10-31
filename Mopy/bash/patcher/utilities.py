@@ -33,6 +33,7 @@ import re
 import struct
 # Internal
 from .. import bush # for game and actorValues
+from .. import bosh
 from ..balt import Progress
 from ..bolt import GPath, _unicode, deprint, CsvReader, csvFormat
 from ..bosh import LoadFactory, ModFile, dirs, inisettings
@@ -56,10 +57,9 @@ class ActorFactions:
     def readFactionEids(self,modInfo):
         """Extracts faction editor ids from modInfo and its masters."""
         loadFactory = LoadFactory(False,MreRecord.type_class['FACT'])
-        from bash.bosh import modInfos
         for modName in (modInfo.header.masters + [modInfo.name]):
             if modName in self.gotFactions: continue
-            modFile = ModFile(modInfos[modName],loadFactory)
+            modFile = ModFile(bosh.modInfos[modName],loadFactory)
             modFile.load(True)
             mapper = modFile.getLongMapper()
             for record in modFile.FACT.getActiveRecords():
@@ -297,10 +297,9 @@ class ActorLevels:
         """Imports actor level data from the specified mod and its masters."""
         mod_id_levels, gotLevels = self.mod_id_levels, self.gotLevels
         loadFactory = LoadFactory(False,MreRecord.type_class['NPC_'])
-        from bash.bosh import modInfos
         for modName in (modInfo.header.masters + [modInfo.name]):
             if modName in gotLevels: continue
-            modFile = ModFile(modInfos[modName],loadFactory)
+            modFile = ModFile(bosh.modInfos[modName],loadFactory)
             modFile.load(True)
             mapper = modFile.getLongMapper()
             for record in modFile.NPC_.getActiveRecords():
@@ -817,10 +816,9 @@ class FactionRelations:
     def readFactionEids(self,modInfo):
         """Extracts faction editor ids from modInfo and its masters."""
         loadFactory = LoadFactory(False,MreRecord.type_class['FACT'])
-        from bash.bosh import modInfos
         for modName in (modInfo.header.masters + [modInfo.name]):
             if modName in self.gotFactions: continue
-            modFile = ModFile(modInfos[modName],loadFactory)
+            modFile = ModFile(bosh.modInfos[modName],loadFactory)
             modFile.load(True)
             mapper = modFile.getLongMapper()
             for record in modFile.FACT.getActiveRecords():
@@ -1149,15 +1147,14 @@ class CBash_FidReplacer:
         """Updates specified mod file."""
         old_new,old_eid,new_eid = self.old_new,self.old_eid,self.new_eid
         #Filter the fid replacements to only include existing mods
-        from bash.bosh import modInfos
-        existing = modInfos.keys()
+        existing = bosh.modInfos.keys()
         old_new = dict((oldId,newId) for oldId,newId in old_new.iteritems() if
                        oldId[0] in existing and newId[0] in existing)
         if not old_new: return False
         # old_count = {} # unused - was meant to be used ?
         with ObCollection(ModsPath=dirs['mods'].s) as Current:
             for newId in set(old_new.values()):
-                Current.addMod(modInfos[newId[0]].getPath().stail,
+                Current.addMod(bosh.modInfos[newId[0]].getPath().stail,
                                Saveable=False)
             modFile = Current.addMod(modInfo.getPath().stail)
             Current.load()
