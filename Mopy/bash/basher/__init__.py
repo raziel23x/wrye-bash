@@ -4857,6 +4857,7 @@ class BashStatusBar(wx.StatusBar):
         self.SetStatusText(u'',1)
 
 #------------------------------------------------------------------------------
+import cProfile
 class BashFrame(wx.Frame):
     """Main application frame."""
     def __init__(self, parent=None,pos=wx.DefaultPosition,size=(400,500),
@@ -4968,6 +4969,9 @@ class BashFrame(wx.Frame):
             return text
         #--Ignore deactivation events.
         if event and not event.GetActive() or self.inRefreshData: return
+        cProfile.runctx('self._refresh()', globals(), locals(), sort='cumtime')
+
+    def _refresh(self):
         #--UPDATES-----------------------------------------
         self.inRefreshData = True
         popMods = popSaves = popInis = None
