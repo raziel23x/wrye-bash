@@ -425,7 +425,7 @@ class List(wx.Panel):
         #--Populate items
         for itemDex in xrange(len(self.items)):
             mode = int(itemDex >= listItemCount)
-            self.PopulateItem(itemDex,mode,selected, dataDict=dataDict) # (ut) takes time
+            self.PopulateItem(itemDex,mode,selected,dataDict=dataDict)
         #--Delete items?
         while self.list.GetItemCount() > len(self.items):
             self.list.DeleteItem(self.list.GetItemCount()-1)
