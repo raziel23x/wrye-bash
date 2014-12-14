@@ -331,9 +331,11 @@ def Init(path):
             try:
                 _Clo_create_handle(byref(self._DB),game,_enc(gamePath),userPath)
             except LibloError as err:
-                if err.args[0].startswith("LIBLO_WARN_LO_MISMATCH"):
-                    # If there is a Mismatch between loadorder.txt and plugns.txt finish initialization
-                    # and fix the missmatch at a later time
+                if (err.code == LIBLO_WARN_LO_MISMATCH
+                    or err.code == LIBLO_WARN_INVALID_LIST):
+                    # If there is a Mismatch between loadorder.txt and
+                    # and plugins.txt, or one of them is invalid, finish
+                    # initialization and fix the missmatch at a later time
                     pass
                 else:
                     raise err
@@ -410,7 +412,14 @@ def Init(path):
         def GetLoadOrder(self):
             plugins = c_char_p_p()
             num = c_size_t()
-            _Clo_get_load_order(self._DB, byref(plugins), byref(num))
+            try:
+                _Clo_get_load_order(self._DB, byref(plugins), byref(num))
+            except LibloError as err:
+                if err.code == LIBLO_WARN_INVALID_LIST:
+                    _Clo_fix_plugin_lists(self._DB)
+                    return self.GetLoadOrder()
+                else:
+                    raise err
             return [GPath(_uni(plugins[i])) for i in xrange(num.value)]
         def _GetLoadOrder(self):
             ret = self.LoadOrderList(self.GetLoadOrder())
@@ -426,7 +435,14 @@ def Init(path):
         def GetPluginLoadOrder(self, plugin):
             plugin = _enc(plugin)
             index = c_size_t()
-            _Clo_get_plugin_position(self._DB,plugin,byref(index))
+            try:
+                _Clo_get_plugin_position(self._DB,plugin,byref(index))
+            except LibloError as err:
+                if err.code == LIBLO_WARN_INVALID_LIST:
+                    _Clo_fix_plugin_lists(self._DB)
+                    return self.GetPluginLoadOrder(plugin)
+                else:
+                    raise err
             return index.value
 
         def SetPluginLoadOrder(self, plugin, index):
@@ -435,7 +451,14 @@ def Init(path):
 
         def GetIndexedPlugin(self, index):
             plugin = c_char_p()
-            _Clo_get_indexed_plugin(self._DB,index,byref(plugin))
+            try:
+                _Clo_get_indexed_plugin(self._DB,index,byref(plugin))
+            except LibloError as err:
+                if err.code == LIBLO_WARN_INVALID_LIST:
+                    _Clo_fix_plugin_lists(self._DB)
+                    return self.GetIndexedPlugin(index)
+                else:
+                    raise err
             return GPath(_uni(plugin.value))
 
         # ---------------------------------------------------------------------
@@ -521,7 +544,14 @@ def Init(path):
         def GetActivePlugins(self):
             plugins = c_char_p_p()
             num = c_size_t()
-            _Clo_get_active_plugins(self._DB, byref(plugins), byref(num))
+            try:
+                _Clo_get_active_plugins(self._DB, byref(plugins), byref(num))
+            except LibloError as err:
+                if err.code == LIBLO_WARN_INVALID_LIST:
+                    _Clo_fix_plugin_lists(self._DB)
+                    return self.GetActivePlugins()
+                else:
+                    raise err
             return self.GetOrdered([GPath(_uni(plugins[i])) for i in xrange(num.value)])
         def _GetActivePlugins(self):
             ret = self.ActivePluginsList(self.GetActivePlugins())
@@ -541,7 +571,14 @@ def Init(path):
 
         def IsPluginActive(self,plugin):
             active = c_bool()
-            _Clo_get_plugin_active(self._DB,_enc(plugin),byref(active))
+            try:
+                _Clo_get_plugin_active(self._DB,_enc(plugin),byref(active))
+            except LibloError as err:
+                if err.code == LIBLO_WARN_INVALID_LIST:
+                    _Clo_fix_plugin_lists(self._DB)
+                    return self.IsPluginActive(plugin)
+                else:
+                    raise err
             return active.value
 
         # ---------------------------------------------------------------------
