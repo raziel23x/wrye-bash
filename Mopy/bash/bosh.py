@@ -3026,7 +3026,7 @@ class Plugins:
             lo.SetLoadOrder(self.LoadOrder)
         except liblo.LibloError as e:
             if e.code == liblo.LIBLO_ERROR_INVALID_ARGS:
-                raise bolt.BoltError(u'Cannot load plugins before masters.')
+                raise bolt.BoltError(e.msg)
         # Now reset the mtimes cache or LockLO feature will revert intentional changes.
         for name in modInfos.mtimes:
             path = modInfos[name].getPath()
