@@ -443,7 +443,7 @@ def pack7z(dstFile, srcDir, progress=None):
             index += 1
         #end if
     #end for
-    result = ins.close()
+    result = ins.close() # TODO(ut) PyCharm: close() does not return anything (?)
     if result:
         dstFile.temp.remove()
         raise StateError(dstFile.s+u': Compression failed:\n'+u'\n'.join(errorLine))
@@ -496,7 +496,7 @@ def unpack7z(srcFile, dstDir, progress=None):
             index += 1
         #end if
     #end for
-    result = ins.close()
+    result = ins.close() # TODO(ut) PyCharm: close() does not return anything (?)
     if result:
         raise StateError(srcFile.s+u': Extraction failed:\n'+u'\n'.join(errorLine))
     #end if
