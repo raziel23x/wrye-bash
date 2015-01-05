@@ -28,6 +28,7 @@
 from constants import bethDataFiles, allBethFiles
 from ... import brec
 from ...brec import *
+# from brec import MreGlob # this also destroys the game detection alg for Python version
 
 # Util Constants ---------------------------------------------------------------
 #--Null strings (for default empty byte arrays)
