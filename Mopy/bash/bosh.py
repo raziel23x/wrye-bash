@@ -10022,7 +10022,7 @@ def isPBashMergeable(modInfo,verbose=True):
         if not verbose: return False
         reasons += u'\n.    '+_(u"Has 'NoMerge' tag.")
     #--Load test
-    mergeTypes = set([recClass.classType for recClass in PatchFile.mergeClasses])
+    mergeTypes = set([recClass.classType for recClass in bush.game.mergeClasses])
     modFile = ModFile(modInfo,LoadFactory(False,*mergeTypes))
     try:
         modFile.load(True,loadStrings=False)
@@ -11154,7 +11154,6 @@ def initBosh(personal='',localAppData='',oblivionPath=''):
     initOptions(bashIni)
     initLogFile()
     Installer.initData()
-    PatchFile.initGameData()
 
 def initSettings(readOnly=False, _dat=u'BashSettings.dat',
                  _bak=u'BashSettings.dat.bak'):

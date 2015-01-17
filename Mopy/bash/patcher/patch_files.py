@@ -21,25 +21,19 @@
 #  https://github.com/wrye-bash
 #
 # =============================================================================
-from operator import attrgetter
 import time
-import balt
-from bolt import GPath, BoltError, SubProgress, deprint
-import bolt
-from bosh import ModFile, modInfos, ModInfo, LoadFactory, MasterSet, formatDate
-from brec import MreRecord, ModError
-import bush
-from record_groups import MobObjects
+from operator import attrgetter
+from .. import bush # for game etc
+from .. import bosh # for modInfos
+from ..bosh import ModFile, ModInfo, LoadFactory, MasterSet, formatDate
+from ..brec import MreRecord, ModError
+from ..balt import showWarning
+from ..bolt import GPath, BoltError, CancelError, SubProgress, deprint, \
+    Progress
+from ..record_groups import MobObjects
 
 class PatchFile(ModFile):
     """Defines and executes patcher configuration."""
-    #--Class
-    mergeClasses = tuple()
-
-    @staticmethod
-    def initGameData():
-        """Needs to be called after bush.game has been set"""
-        PatchFile.mergeClasses = bush.game.mergeClasses
 
     @staticmethod
     def generateNextBashedPatch(wxParent=None):
@@ -48,17 +42,17 @@ class PatchFile(ModFile):
            displays a dialog error"""
         for num in xrange(10):
             modName = GPath(u'Bashed Patch, %d.esp' % num)
-            if modName not in modInfos:
-                patchInfo = ModInfo(modInfos.dir,GPath(modName))
-                patchInfo.mtime = max([time.time()]+[info.mtime for info in modInfos.values()])
+            if modName not in bosh.modInfos:
+                patchInfo = ModInfo(bosh.modInfos.dir,GPath(modName))
+                patchInfo.mtime = max([time.time()]+[info.mtime for info in bosh.modInfos.values()])
                 patchFile = ModFile(patchInfo)
                 patchFile.tes4.author = u'BASHED PATCH'
                 patchFile.safeSave()
-                modInfos.refresh()
+                bosh.modInfos.refresh()
                 return modName
         else:
             if wxParent is not None:
-                balt.showWarning(wxParent, u"Unable to create new bashed patch: 10 bashed patches already exist!")
+                showWarning(wxParent, u"Unable to create new bashed patch: 10 bashed patches already exist!")
         return None
 
     #--Instance
@@ -66,7 +60,7 @@ class PatchFile(ModFile):
         """Initialization."""
         ModFile.__init__(self,modInfo,None)
         self.tes4.author = u'BASHED PATCH'
-        self.tes4.masters = [modInfos.masterName]
+        self.tes4.masters = [bosh.modInfos.masterName]
         self.longFids = True
         #--New attrs
         self.aliases = {} #--Aliases from one mod name to another. Used by text file patchers.
@@ -81,7 +75,7 @@ class PatchFile(ModFile):
         #--Config
         self.bodyTags = 'ARGHTCCPBS' #--Default bodytags
         #--Mods
-        loadMods = [name for name in modInfos.ordered if bush.fullLoadOrder[name] < bush.fullLoadOrder[PatchFile.patchName]]
+        loadMods = [name for name in bosh.modInfos.ordered if bush.fullLoadOrder[name] < bush.fullLoadOrder[PatchFile.patchName]]
         if not loadMods:
             raise BoltError(u"No active mods dated before the bashed patch")
         self.setMods(loadMods, [])
@@ -94,7 +88,7 @@ class PatchFile(ModFile):
         if mergeMods is not None: self.mergeMods = mergeMods
         self.loadSet = set(self.loadMods)
         self.mergeSet = set(self.mergeMods)
-        self.allMods = modInfos.getOrdered(self.loadSet|self.mergeSet)
+        self.allMods = bosh.modInfos.getOrdered(self.loadSet|self.mergeSet)
         self.allSet = set(self.allMods)
 
     def getKeeper(self):
@@ -133,21 +127,21 @@ class PatchFile(ModFile):
         self.readFactory = LoadFactory(False,*readClasses.values())
         self.loadFactory = LoadFactory(True,*writeClasses.values())
         #--Merge Factory
-        self.mergeFactory = LoadFactory(False,*PatchFile.mergeClasses)
+        self.mergeFactory = LoadFactory(False, *bush.game.mergeClasses)
 
     def scanLoadMods(self,progress):
         """Scans load+merge mods."""
         if not len(self.loadMods): return
-        nullProgress = bolt.Progress()
+        nullProgress = Progress()
         progress = progress.setFull(len(self.allMods))
         for index,modName in enumerate(self.allMods):
-            bashTags = modInfos[modName].getBashTags()
+            bashTags = bosh.modInfos[modName].getBashTags()
             if modName in self.loadMods and u'Filter' in bashTags:
                 self.unFilteredMods.append(modName)
             try:
                 loadFactory = (self.readFactory,self.mergeFactory)[modName in self.mergeSet]
                 progress(index,modName.s+u'\n'+_(u'Loading...'))
-                modInfo = modInfos[GPath(modName)]
+                modInfo = bosh.modInfos[GPath(modName)]
                 modFile = ModFile(modInfo,loadFactory)
                 modFile.load(True,SubProgress(progress,index,index+0.5))
             except ModError as e:
@@ -179,7 +173,7 @@ class PatchFile(ModFile):
                     patcher.scanModFile(modFile,nullProgress)
                 # Clip max version at 1.0.  See explanation in the CBash version as to why.
                 self.tes4.version = min(max(modFile.tes4.version, self.tes4.version),max(bush.game.esp.validHeaderVersions))
-            except bolt.CancelError:
+            except CancelError:
                 raise
             except:
                 print _(u"MERGE/SCAN ERROR:"),modName.s
@@ -197,7 +191,7 @@ class PatchFile(ModFile):
         selfMergeFactoryType_class = self.mergeFactory.type_class
         selfReadFactoryAddClass = self.readFactory.addClass
         selfLoadFactoryAddClass = self.loadFactory.addClass
-        nullFid = (GPath(modInfos.masterName),0)
+        nullFid = (GPath(bosh.modInfos.masterName),0)
         for blockType,block in modFile.tops.iteritems():
             iiSkipMerge = iiMode and blockType not in ('LVLC','LVLI','LVSP')
             #--Make sure block type is also in read and write factories
@@ -283,7 +277,7 @@ class PatchFile(ModFile):
             for mod in self.compiledAllMods: log (u'* '+mod.s)
         log.setHeader(u'=== '+_(u'Active Mods'),True)
         for name in self.allMods:
-            version = modInfos.getVersion(name)
+            version = bosh.modInfos.getVersion(name)
             if name in self.loadMods:
                 message = u'* %02X ' % (self.loadMods.index(name),)
             else:
