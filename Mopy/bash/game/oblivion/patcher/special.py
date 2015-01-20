@@ -106,7 +106,7 @@ class AlchemicalCatalogs(_AAlchemicalCatalogs,Patcher):
         id_ingred = self.id_ingred
         iconPath, modPath, modb_p = (u'Clutter\\IconBook9.dds',
                                      u'Clutter\\Books\\Octavo02.NIF','\x03>@A')
-        for (num,objectId,full,value) in bush.ingred_alchem:
+        for (num,objectId,full,value) in _ingred_alchem:
             book = getBook(objectId, u'cobCatAlchemIngreds%s' % num, full,
                            value, iconPath, modPath, modb_p)
             with sio(book.text) as buff:
@@ -134,7 +134,7 @@ class AlchemicalCatalogs(_AAlchemicalCatalogs,Patcher):
         #--Effect catalogs
         iconPath, modPath, modb_p = (u'Clutter\\IconBook7.dds',
                                      u'Clutter\\Books\\Octavo01.NIF','\x03>@A')
-        for (num,objectId,full,value) in bush.effect_alchem:
+        for (num,objectId,full,value) in _effect_alchem:
             book = getBook(objectId, u'cobCatAlchemEffects%s' % num, full,
                            value, iconPath, modPath, modb_p)
             with sio(book.text) as buff:
@@ -189,7 +189,7 @@ class CBash_AlchemicalCatalogs(_AAlchemicalCatalogs,CBash_Patcher):
     def finishPatch(self,patchFile,progress):
         """Edits the bashed patch file directly."""
         subProgress = SubProgress(progress)
-        subProgress.setFull(len(bush.effect_alchem) + len(bush.ingred_alchem))
+        subProgress.setFull(len(_effect_alchem) + len(_ingred_alchem))
         pstate = 0
         #--Setup
         try:
@@ -232,7 +232,7 @@ class CBash_AlchemicalCatalogs(_AAlchemicalCatalogs,CBash_Patcher):
             return book
         #--Ingredients Catalog
         id_ingred = self.id_ingred
-        for (num,objectId,full,value) in bush.ingred_alchem:
+        for (num,objectId,full,value) in _ingred_alchem:
             subProgress(pstate, _(u'Cataloging Ingredients...')+u'\n%s' % full)
             pstate += 1
             book = getBook(patchFile, objectId)
@@ -298,7 +298,7 @@ class CBash_AlchemicalCatalogs(_AAlchemicalCatalogs,CBash_Patcher):
                 if mgef in actorEffects: effectName += actorNames[actorValue]
                 effect_ingred.setdefault(effectName, []).append((index,full))
         #--Effect catalogs
-        for (num,objectId,full,value) in bush.effect_alchem:
+        for (num,objectId,full,value) in _effect_alchem:
             subProgress(pstate, _(u'Cataloging Effects...')+u'\n%s' % full)
             book = getBook(patchFile,objectId)
             with sio() as buff:
@@ -903,3 +903,101 @@ class CBash_SEWorldEnforcer(_ASEWorldEnforcer,CBash_Patcher):
         self.mod_eids = {}
 
 #------------------------------------------------------------------------------
+# Alchemical Catalogs ---------------------------------------------------------
+_ingred_alchem = (
+    (1,0xCED,_(u'Alchemical Ingredients I'),250),
+    (2,0xCEC,_(u'Alchemical Ingredients II'),500),
+    (3,0xCEB,_(u'Alchemical Ingredients III'),1000),
+    (4,0xCE7,_(u'Alchemical Ingredients IV'),2000),
+    )
+_effect_alchem = (
+    (1,0xCEA,_(u'Alchemical Effects I'),500),
+    (2,0xCE9,_(u'Alchemical Effects II'),1000),
+    (3,0xCE8,_(u'Alchemical Effects III'),2000),
+    (4,0xCE6,_(u'Alchemical Effects IV'),4000),
+    )
+
+# Power Exhaustion ------------------------------------------------------------
+ob = bush.getIdFunc(u'Oblivion.esm')
+orrery = bush.getIdFunc(u'DLCOrrery.esp')
+
+id_exhaustion = {
+    ob(0x014D23): 9, # AbPilgrimsGrace
+    ob(0x022A43): 7, # BSLoverKiss
+    ob(0x022A3A): 7, # BSRitualMaraGift
+    ob(0x022A63): 7, # BSSerpent
+    ob(0x022A66): 7, # BSShadowMoonshadow
+    ob(0x022A6C): 7, # BSTower
+    ob(0x0CB623): 7, # BSTowerWarden
+    ob(0x06B69D): 7, # DoomstoneAetherius
+    ob(0x06A8EE): 7, # DoomstoneApprentice
+    ob(0x06A8EF): 7, # DoomstoneAtronach
+    ob(0x06B6A3): 7, # DoomstoneDragon
+    ob(0x06B69F): 7, # DoomstoneJode
+    ob(0x06B69E): 7, # DoomstoneJone
+    ob(0x06A8F2): 7, # DoomstoneLady
+    ob(0x06A8F3): 7, # DoomstoneLord
+    ob(0x06A8F5): 7, # DoomstoneLover
+    ob(0x06A8ED): 7, # DoomstoneMage
+    ob(0x06B6A1): 7, # DoomstoneMagnus
+    ob(0x06B6B1): 7, # DoomstoneNirn
+    ob(0x06A8EC): 7, # DoomstoneRitualMarasMercy
+    ob(0x06A8EB): 7, # DoomstoneRitualMarasMilk
+    ob(0x06A8F8): 7, # DoomstoneSerpent
+    ob(0x06A8F6): 7, # DoomstoneShadow
+    ob(0x06B6A2): 7, # DoomstoneShezarr
+    ob(0x06B6A0): 7, # DoomstoneSithian
+    ob(0x06A8F1): 7, # DoomstoneSteed
+    ob(0x06A8F4): 7, # DoomstoneThief
+    ob(0x06A8F7): 7, # DoomstoneTower
+    ob(0x008E53): 7, # DoomstoneTowerArmor
+    ob(0x06A8F0): 7, # DoomstoneWarrior
+    ob(0x047AD0): 7, # PwRaceBretonShield
+    ob(0x047AD5): 7, # PwRaceDarkElfGuardian
+    ob(0x047ADE): 7, # PwRaceImperialAbsorbFatigue
+    ob(0x047ADD): 7, # PwRaceImperialCharm
+    ob(0x047ADF): 7, # PwRaceKhajiitDemoralize
+    ob(0x047AE4): 7, # PwRaceNordFrostDamage
+    ob(0x047AE3): 7, # PwRaceNordShield
+    ob(0x047AD3): 7, # PwRaceOrcBerserk
+    ob(0x047AE7): 7, # PwRaceRedguardFortify
+    ob(0x047AE9): 7, # PwRaceWoodElfCommandCreature
+    ob(0x03BEDB): 7, # VampireEmbraceofShadows
+    ob(0x03BEDC): 7, # VampireReignofTerror
+    ob(0x03BED9): 7, # VampireSeduction
+    #--Shivering Isles
+    ob(0x08F024): 7, # SE02BlessingDementia
+    ob(0x08F023): 7, # SE02BlessingMania
+    ob(0x03161E): 5, # SE07SaintSpell
+    ob(0x03161D): 5, # SE07SeducerSpell
+    ob(0x05DD22): 3, # SE14WeatherSpell
+    ob(0x081C35): 7, # SE44Frenzy
+    ob(0x018DBD): 6, # SEPwSummonDarkSeducer
+    ob(0x014B35): 6, # SEPwSummonFleshAtronach
+    ob(0x018DBC): 6, # SEPwSummonGoldenSaint
+    ob(0x050C76): 3, # SE09PwGKHead1
+    ob(0x050C77): 3, # SE09PwGKHead2
+    ob(0x050C78): 3, # SE09PwGKHeart1
+    ob(0x050C79): 3, # SE09PwGKHeart2
+    ob(0x050C7A): 3, # SE09PwGKLeftArm1
+    ob(0x050C7B): 3, # SE09PwGKLeftArm2
+    ob(0x050C7C): 3, # SE09PwGKLeftArm3
+    ob(0x050C82): 3, # SE09PwGKLegs1
+    ob(0x050C83): 3, # SE09PwGKLegs2
+    ob(0x050C7D): 3, # SE09PwGKRightArm1
+    ob(0x050C7E): 3, # SE09PwGKRightArm2
+    ob(0x050C7F): 3, # SE09PwGKRightArm3
+    ob(0x050C80): 3, # SE09PwGKTorso1
+    ob(0x050C81): 3, # SE09PwGKTorso2
+    ob(0x08E93F): 3, # SESuicidePower
+
+    #--Orrery
+    orrery(0x11DC5F): 7, # Masser's Might
+    orrery(0x11DC60): 7, # Masser's Grace
+    orrery(0x11DC62): 7, # Secunda's Will
+    orrery(0x11DC64): 7, # Secunda's Opportunity
+    orrery(0x11DC66): 7, # Masser's Alacrity
+    orrery(0x11DC68): 7, # Secunda's Magnetism
+    orrery(0x11DC6A): 7, # Secunda's Brilliance
+    orrery(0x11DC6C): 7, # Masser's Courage
+    }
