@@ -2881,7 +2881,8 @@ class InstallersPanel(SashTankPanel):
             ('gSkipped',_(u'Skipped')),
             )
         for name,title in infoTitles:
-            gPage = roTextCtrl(self.gNotebook, name=name, hscroll=True)
+            gPage = roTextCtrl(self.gNotebook, name=name, hscroll=True,
+                               autotooltip=False)
             self.gNotebook.AddPage(gPage,title)
             self.infoPages.append([gPage,False])
         self.gNotebook.SetSelection(settings['bash.installers.page'])
