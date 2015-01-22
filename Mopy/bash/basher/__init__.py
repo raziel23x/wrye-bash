@@ -860,7 +860,7 @@ class INIList(List):
         else: #--Iterable
             for file in files:
                 self.PopulateItem(file,selected=selected)
-        bashFrame.SetStatusCount()
+        self.panel.SetStatusCount()
 
     def PopulateItem(self,itemDex,mode=0,selected=set()):
         #--String name of item?
@@ -944,7 +944,7 @@ class INIList(List):
         tweak = bosh.iniInfos[self.items[hitItem]]
         if tweak.status == 20: return # already applied
         #-- If we're applying to Oblivion.ini, show the warning
-        iniPanel = self.GetParent().GetParent().GetParent()
+        iniPanel = self.panel
         choice = iniPanel.GetChoice().tail
         if choice in bush.game.iniFiles:
             message = (_(u"Apply an ini tweak to %s?") % choice
@@ -1134,7 +1134,7 @@ class ModList(List):
                 if file in bosh.modInfos:
                     self.PopulateItem(file,selected=selected)
         modDetails.SetFile(detail)
-        bashFrame.SetStatusCount()
+        self.panel.SetStatusCount()
         #--Saves
         if refreshSaves and BashFrame.saveList:
             BashFrame.saveList.RefreshUI()
@@ -2153,7 +2153,7 @@ class SaveList(List):
             for file in files:
                 self.PopulateItem(file,selected=selected)
         saveDetails.SetFile(detail)
-        bashFrame.SetStatusCount()
+        self.panel.SetStatusCount()
 
     #--Populate Item
     def PopulateItem(self,itemDex,mode=0,selected=set()):
@@ -3138,10 +3138,9 @@ class InstallersPanel(SashTankPanel):
             BashFrame.modList.RefreshUI('ALL')
         if BashFrame.iniList is not None:
             if bosh.iniInfos.refresh():
-                #iniList->INIPanel.splitter.left->INIPanel.splitter->INIPanel
-                BashFrame.iniList.GetParent().GetParent().GetParent().RefreshUI('ALL')
+                BashFrame.iniList.panel.RefreshUI('ALL')
             else:
-                BashFrame.iniList.GetParent().GetParent().GetParent().RefreshUI('TARGETS')
+                BashFrame.iniList.panel.RefreshUI('TARGETS')
 
     def RefreshDetails(self,item=None):
         """Refreshes detail view associated with data from item."""
@@ -3451,7 +3450,7 @@ class ScreensList(List):
         else: #--Iterable
             for file in files:
                 self.PopulateItem(file,selected=selected)
-        bashFrame.SetStatusCount()
+        self.panel.SetStatusCount()
 
     #--Populate Item
     def PopulateItem(self,itemDex,mode=0,selected=set()):
@@ -3583,7 +3582,7 @@ class BSAList(List):
             for file in files:
                 self.PopulateItem(file,selected=selected)
         BSADetails.SetFile(detail)
-        bashFrame.SetStatusCount()
+        self.panel.SetStatusCount()
 
     #--Populate Item
     def PopulateItem(self,itemDex,mode=0,selected=set()):
@@ -3851,7 +3850,7 @@ class MessageList(List):
         else: #--Iterable
             for file in files:
                 self.PopulateItem(file,selected=selected)
-        bashFrame.SetStatusCount()
+        self.panel.SetStatusCount()
 
     #--Populate Item
     def PopulateItem(self,itemDex,mode=0,selected=set()):
@@ -4494,7 +4493,7 @@ class BashFrame(wx.Frame):
             message = _(u"It appears that you have more than 325 mods and bsas in your data directory and auto-ghosting is disabled. This may cause problems in %s; see the readme under auto-ghost for more details and please enable auto-ghost.") % bush.game.displayName
             if len(bosh.bsaInfos.data) + len(bosh.modInfos.data) >= 400:
                 message = _(u"It appears that you have more than 400 mods and bsas in your data directory and auto-ghosting is disabled. This will cause problems in %s; see the readme under auto-ghost for more details. ") % bush.game.displayName
-            balt.showWarning(bashFrame,message,_(u'Too many mod files.'))
+            balt.showWarning(self, message, _(u'Too many mod files.'))
 
     def Restart(self,args=True,uac=False):
         if not args: return
@@ -4548,13 +4547,6 @@ class BashFrame(wx.Frame):
             if bosh.modInfos.voCurrent:
                 title += u' ['+bosh.modInfos.voCurrent+u']'
         wx.Frame.SetTitle(self,title)
-
-    def SetStatusCount(self):
-        """Sets the status bar count field. Actual work is done by current panel."""
-        if hasattr(self,'notebook'): #--Hack to get around problem with screens tab.
-            selection = self.notebook.GetSelection()
-            selection = max(min(selection,self.notebook.GetPageCount()),0)
-            self.notebook.GetPage(selection).SetStatusCount()
 
     #--Events ---------------------------------------------
     def RefreshData(self, event=None):
