@@ -2216,7 +2216,8 @@ class Links(list):
             return None
 
     #--Popup a menu from the links
-    def PopupMenu(self,parent,eventWindow=None,*args):
+    def PopupMenu(self, parent=None, eventWindow=None, *args):
+        parent = parent or Link.Frame
         eventWindow = eventWindow or parent
         menu = wx.Menu()
         Link.Popup = menu
