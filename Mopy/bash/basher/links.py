@@ -27,6 +27,7 @@ attributes which are populated here. Therefore the order of menu items is
 also defined in these functions."""
 
 import os
+import traceback
 import win32gui
 from . import InstallersPanel, InstallersList, INIList, ModList, SaveList, \
     BSAList, ScreensList, MessageList, MasterList, bEnableWizard,  PeopleList,\
@@ -236,8 +237,12 @@ def InitStatusBar():
                                     icon = test
                                     break
                     except:
-                        deprint(_(u'Error finding icon for %s:') % target.s,
+                        try:
+                            deprint(
+                                _(u'Error finding icon for %r:') % target.s,
                                 traceback=True)
+                        except UnicodeDecodeError:
+                            traceback.print_exc()
                         icon = u'not\\a\\path'
             icon = GPath(icon)
             # First try a custom icon
