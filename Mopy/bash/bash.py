@@ -384,7 +384,7 @@ def main():
             try: print msg2
             except UnicodeError: print msg2.encode('mbcs')
             return
-
+        global basher, balt, barb
         import basher
         import barb
         import balt
@@ -501,8 +501,9 @@ def main():
 def _showErrorInGui(e):
     """Try really hard to be able to show the error in the GUI."""
     try:
-        if 'basher' not in locals():
+        if 'basher' not in globals():
             # we get here if initBosh threw
+            global basher, balt, barb
             import basher
             import barb
             import balt
