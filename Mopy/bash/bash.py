@@ -40,8 +40,9 @@ opts,extra = barg.parse()
 bass.language = opts.language
 import bolt
 from bolt import GPath
-basherImported = False
-bashFrame = None # introduced to avoid importing basher to barb.py
+
+basher, balt, barb =  None, None, None
+
 #------------------------------------------------------------------------------
 def SetHomePath(homePath):
     drive,path = os.path.splitdrive(homePath)
@@ -62,14 +63,12 @@ def SetUserPath(iniPath=None, uArg=None):
 # Backup/Restore --------------------------------------------------------------
 def cmdBackup():
     # backup settings if app version has changed or on user request
-    if not basherImported:
-        import basher, barb
-        global bashFrame
-        bashFrame = basher.bashFrame
+    global basher, balt, barb
+    if not basher: import basher, balt, barb
     path = None
     quit = opts.backup and opts.quietquit
     if opts.backup: path = GPath(opts.filename)
-    backup = barb.BackupSettings(bashFrame,path,quit,opts.backup_images)
+    backup = barb.BackupSettings(balt.Link.Frame,path,quit,opts.backup_images)
     if backup.PromptMismatch() or opts.backup:
         try:
             backup.Apply()
@@ -86,17 +85,15 @@ def cmdBackup():
 
 def cmdRestore():
     # restore settings on user request
-    if not basherImported:
-        import basher, barb
-        global bashFrame
-        bashFrame = basher.bashFrame
+    global basher, balt, barb
+    if not basher: import basher, balt, barb
     backup = None
     path = None
     quit = opts.restore and opts.quietquit
     if opts.restore: path = GPath(opts.filename)
     if opts.restore:
         try:
-            backup = barb.RestoreSettings(bashFrame,path,quit,
+            backup = barb.RestoreSettings(balt.Link.Frame, path, quit,
                                           opts.backup_images)
             backup.Apply()
         except barb.BackupCancelled:
@@ -191,7 +188,7 @@ def exit():
             except:
                 pass
 
-    if basherImported:
+    if basher:
         from basher import appRestart
         from basher import uacRestart
         if appRestart:
@@ -418,9 +415,6 @@ def main():
     quit = cmdRestore() or quit
     if quit: return
 
-    global basherImported
-    basherImported = True
-
     basher.isUAC = isUAC
     if isUAC:
         uacRestart = False
@@ -475,8 +469,7 @@ def main():
             basher.uacRestart = True
             return
 
-    global bashFrame
-    bashFrame = app.Init() # basher.bashFrame is set here !
+    app.Init() # Link.Frame is set here !
     app.MainLoop()
 
 # Show error in gui -----------------------------------------------------------
@@ -489,10 +482,10 @@ def _showErrorInGui(e):
     title = _(u'Error! Unable to start Wrye Bash.')
     msg = _(
         u'Please ensure Wrye Bash is correctly installed.') + u'\n\n\n%s' % msg
-    try: # raise ImportError()
-        if 'basher' not in globals():
+    try: # raise ImportError("TEST _showErrorInAnyGui")
+        global basher, balt, barb
+        if not basher:
             # we get here if initBosh threw
-            global basher, balt, barb
             import basher
             import barb
             import balt
