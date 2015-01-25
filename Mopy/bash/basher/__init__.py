@@ -477,8 +477,8 @@ class List(balt.UIList):
                     u'Delete these items?  This operation cannot be '
                     u'undone.'), [message]) as dialog:
                 if dialog.ShowModal() == ListBoxes.ID_CANCEL: return # (ut) not needed to refresh I guess
-                id = dialog.ids[message[0]]
-                checks = dialog.FindWindowById(id)
+                id_ = dialog.ids[message[0]]
+                checks = dialog.FindWindowById(id_)
                 if checks:
                     dirJoin = self.data.dir.join
                     for i,mod in enumerate(items):
@@ -961,7 +961,9 @@ class INIList(List):
         iniPanel.iniContents.RefreshUI()
         iniPanel.tweakContents.RefreshUI(self.data[0])
 
-    def OnItemSelected(self, event): event.Skip()
+    def OnItemSelected(self, event):
+        """This is set by the IniPanel to its OnSelectTweak()."""
+        event.Skip()
 
 #------------------------------------------------------------------------------
 class INITweakLineCtrl(wx.ListCtrl):
@@ -1842,7 +1844,7 @@ class INIPanel(SashPanel):
                                       choices=self.sortKeys)
         #--Events
         self.comboBox.Bind(wx.EVT_COMBOBOX,self.OnSelectDropDown)
-        self.uiList.Bind(wx.EVT_LIST_ITEM_SELECTED, self.OnSelectTweak) ##:
+        self.uiList.OnItemSelected = lambda s, e: self.OnSelectTweak(e)
         #--Layout
         iniSizer = vSizer(
                 (hSizer(
@@ -4345,9 +4347,9 @@ class BashStatusBar(wx.StatusBar):
         return None
 
     def HitTest(self,mouseEvent):
-        id = mouseEvent.GetId()
+        id_ = mouseEvent.GetId()
         for i,button in enumerate(self.buttons):
-            if button.GetId() == id:
+            if button.GetId() == id_:
                 x = mouseEvent.GetPosition()[0]
                 delta = x/self.size
                 if abs(x) % self.size > self.size:
