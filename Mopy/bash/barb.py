@@ -23,7 +23,6 @@
 # =============================================================================
 
 """Rollback library."""
-import locale
 
 import os
 import re
@@ -31,6 +30,7 @@ import datetime
 import cPickle
 import StringIO
 from subprocess import Popen, PIPE
+import sys
 import bash
 import bass
 import bosh
@@ -440,7 +440,7 @@ def pack7z(dstFile, srcDir, progress=None):
     for line in ins:
         # filenames with non latin characters would raise UnicodeDecodeError
         # patch from: http://stackoverflow.com/a/9951851/281545
-        line = unicode(line, locale.getpreferredencoding())
+        line = unicode(line, sys.getfilesystemencoding())
         maCompressing = regMatch(line)
         if len(errorLine) or regErrMatch(line):
             errorLine.append(line)
@@ -487,7 +487,7 @@ def unpack7z(srcFile, dstDir, progress=None):
     errorLine = []
     index = 0
     for line in ins:
-        line = unicode(line, locale.getpreferredencoding())
+        line = unicode(line, sys.getfilesystemencoding())
         maExtracting = regMatch(line)
         if len(errorLine) or regErrMatch(line):
             errorLine.append(line)
