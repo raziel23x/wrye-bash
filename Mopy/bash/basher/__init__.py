@@ -238,7 +238,14 @@ class NotebookPanel(wx.Panel):
 
     def SetStatusCount(self):
         """Sets status bar count field."""
-        BashFrame.statusBar.SetStatusText(self._sbText(), 2)
+        if hasattr(Link.Frame, 'notebook'): ##: we are being called via onShow
+        # callback in BashNotebook.__init__ where Link.Frame.notebook is not
+        # set - that's ugly in under refresh CoW
+            if Link.Frame.notebook._currentTab is self: ##: we need to check if
+            # we are the current tab because RefreshUI path may call RefreshUI
+            # of other tabs too - this results for instance in mods count
+            # flickering when deleting a save in the saves tab - hunt down
+                BashFrame.statusBar.SetStatusText(self._sbText(), 2)
 
     def OnShow(self):
         """To be called when particular panel is changed to and/or shown for
@@ -4150,7 +4157,7 @@ class BashNotebook(wx.Notebook, balt.TabDragMixin):
         pageIndex = max(min(settings['bash.page'],self.GetPageCount()-1),0)
         if settings['bash.installers.fastStart'] and pageIndex == iInstallers:
             pageIndex = iMods
-        self.SetSelection(pageIndex)
+        self.SetSelection(pageIndex) # sets self._currentPage
         #--Dragging
         self.Bind(balt.EVT_NOTEBOOK_DRAGGED, self.OnTabDragged)
         #--Setup Popup menu for Right Click on a Tab
@@ -4199,10 +4206,11 @@ class BashNotebook(wx.Notebook, balt.TabDragMixin):
 
     def OnShowPage(self,event):
         """Call page's OnShow command."""
-        if event.GetId() == self.GetId():
+        if event.GetId() == self.GetId(): ##: why ?
             bolt.GPathPurge()
-            self.GetPage(event.GetSelection()).OnShow()
-            event.Skip()
+            self._currentTab = self.GetPage(event.GetSelection())
+            self._currentTab.OnShow()
+        event.Skip()
 
     def _onMouseCaptureLost(self, event):
         """Handle the onMouseCaptureLost event
