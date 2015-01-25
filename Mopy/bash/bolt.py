@@ -658,9 +658,21 @@ class Path(object):
         try: # workaround for http://bugs.python.org/issue1681974 see there
             return GPath(tempfile.mkdtemp(prefix=prefix))
         except UnicodeDecodeError:
-            traceback.print_exc()
-            tempdir = unicode(tempfile.gettempdir(), Path._sys_fs_enc)
-            return GPath(tempfile.mkdtemp(prefix=prefix, dir=tempdir))
+            try:
+                traceback.print_exc()
+                print 'trying to pass temp dir in'
+                tempdir = unicode(tempfile.gettempdir(), Path._sys_fs_enc)
+                return GPath(tempfile.mkdtemp(prefix=prefix, dir=tempdir))
+            except UnicodeDecodeError:
+                try:
+                    traceback.print_exc()
+                    print 'trying to encode temp dir prefix'
+                    return GPath(tempfile.mkdtemp(
+                        prefix=prefix.encode(Path._sys_fs_enc)).decode(
+                        Path._sys_fs_enc))
+                except:
+                    print 'Failed to create tmp dir, Bash will not function correctly'
+                    traceback.print_exc()
 
     @staticmethod
     def baseTempDir():
