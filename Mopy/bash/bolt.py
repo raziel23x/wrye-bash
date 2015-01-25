@@ -492,6 +492,7 @@ class Path(object):
     #--Class Vars/Methods -------------------------------------------
     norm_path = {} #--Dictionary of paths
     mtimeResets = [] #--Used by getmtime
+    _sys_fs_enc = sys.getfilesystemencoding() or 'mbcs'
 
     @staticmethod
     def get(name):
@@ -653,8 +654,13 @@ class Path(object):
             return dirJoin(self.tail+u'.tmp')
 
     @staticmethod
-    def tempDir(prefix=None):
-        return GPath(tempfile.mkdtemp(prefix=prefix))
+    def tempDir(prefix=None): # FIXME 180 - test, cleanup
+        try: # workaround for http://bugs.python.org/issue1681974 see there
+            return GPath(tempfile.mkdtemp(prefix=prefix))
+        except UnicodeDecodeError:
+            traceback.print_exc()
+            tempdir = unicode(tempfile.gettempdir(), Path._sys_fs_enc)
+            return GPath(tempfile.mkdtemp(prefix=prefix, dir=tempdir))
 
     @staticmethod
     def baseTempDir():

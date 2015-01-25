@@ -266,6 +266,7 @@ def dump_environment():
     print u"input encoding: %s; output encoding: %s; locale: %s" % (
         sys.stdin.encoding,getattr(sys.stdout,'encoding',None),
         locale.getdefaultlocale())
+    print u"filesystem encoding: %s" % sys.getfilesystemencoding()
 
 # Main ------------------------------------------------------------------------
 def main():
