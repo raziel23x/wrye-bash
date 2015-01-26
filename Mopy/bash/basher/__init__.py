@@ -4487,6 +4487,7 @@ class BashFrame(wx.Frame):
         self.Bind(wx.EVT_ACTIVATE, self.RefreshData)
         #--Data
         self.inRefreshData = False #--Prevent recursion while refreshing.
+        self.booting = True #--Prevent calling refresh on fileInfos twice when booting
         self.knownCorrupted = set()
         self.knownInvalidVerions = set()
         self.oblivionIniCorrupted = False
@@ -4571,7 +4572,7 @@ class BashFrame(wx.Frame):
         #--Config helpers
         bosh.configHelpers.refresh()
         #--Check plugins.txt and mods directory...
-        modInfosChanged = bosh.modInfos.refresh()
+        modInfosChanged = not self.booting and bosh.modInfos.refresh()
         if modInfosChanged:
             popMods = 'ALL'
         #--Have any mtimes been reset?
@@ -4594,10 +4595,10 @@ class BashFrame(wx.Frame):
             del bosh.modInfos.mtimesReset[:]
             popMods = 'ALL'
         #--Check savegames directory...
-        if bosh.saveInfos.refresh():
+        if not self.booting and bosh.saveInfos.refresh():
             popSaves = 'ALL'
         #--Check INI Tweaks...
-        if bosh.iniInfos.refresh():
+        if not self.booting and bosh.iniInfos.refresh():
             popInis = 'ALL'
         #--Ensure BSA timestamps are good - Don't touch this for Skyrim though.
         if bush.game.fsName != 'Skyrim':
@@ -4951,53 +4952,71 @@ def InitSettings(): # this must run first !
 def InitImages():
     """Initialize color and image collections."""
     #--Colors
-    for key,value in settings['bash.colors'].iteritems():
-        colors[key] = value
-
+    for key,value in settings['bash.colors'].iteritems(): colors[key] = value
+    #--Images
+    imgDirJn = bosh.dirs['images'].join
     #--Standard
-    images['save.on'] = Image(GPath(bosh.dirs['images'].join(u'save_on.png')),PNG)
-    images['save.off'] = Image(GPath(bosh.dirs['images'].join(u'save_off.png')),PNG)
+    images['save.on'] = Image(GPath(imgDirJn(u'save_on.png')),PNG)
+    images['save.off'] = Image(GPath(imgDirJn(u'save_off.png')),PNG)
     #--Misc
     #images['oblivion'] = Image(GPath(bosh.dirs['images'].join(u'oblivion.png')),png)
-    images['help.16'] = Image(GPath(bosh.dirs['images'].join(u'help16.png')))
-    images['help.24'] = Image(GPath(bosh.dirs['images'].join(u'help24.png')))
-    images['help.32'] = Image(GPath(bosh.dirs['images'].join(u'help32.png')))
+    images['help.16'] = Image(GPath(imgDirJn(u'help16.png')))
+    images['help.24'] = Image(GPath(imgDirJn(u'help24.png')))
+    images['help.32'] = Image(GPath(imgDirJn(u'help32.png')))
     #--ColorChecks
-    images['checkbox.red.x'] = Image(GPath(bosh.dirs['images'].join(u'checkbox_red_x.png')),PNG)
-    images['checkbox.red.x.16'] = Image(GPath(bosh.dirs['images'].join(u'checkbox_red_x.png')),PNG)
-    images['checkbox.red.x.24'] = Image(GPath(bosh.dirs['images'].join(u'checkbox_red_x_24.png')),PNG)
-    images['checkbox.red.x.32'] = Image(GPath(bosh.dirs['images'].join(u'checkbox_red_x_32.png')),PNG)
-    images['checkbox.red.off.16'] = (Image(GPath(bosh.dirs['images'].join(u'checkbox_red_off.png')),PNG))
-    images['checkbox.red.off.24'] = (Image(GPath(bosh.dirs['images'].join(u'checkbox_red_off_24.png')),PNG))
-    images['checkbox.red.off.32'] = (Image(GPath(bosh.dirs['images'].join(u'checkbox_red_off_32.png')),PNG))
+    images['checkbox.red.x'] = Image(GPath(imgDirJn(u'checkbox_red_x.png')),PNG)
+    images['checkbox.red.x.16'] = Image(GPath(
+        imgDirJn(u'checkbox_red_x.png')),PNG)
+    images['checkbox.red.x.24'] = Image(GPath(
+        imgDirJn(u'checkbox_red_x_24.png')),PNG)
+    images['checkbox.red.x.32'] = Image(GPath(
+        imgDirJn(u'checkbox_red_x_32.png')),PNG)
+    images['checkbox.red.off.16'] = (Image(GPath(
+        imgDirJn(u'checkbox_red_off.png')),PNG))
+    images['checkbox.red.off.24'] = (Image(GPath(
+        imgDirJn(u'checkbox_red_off_24.png')),PNG))
+    images['checkbox.red.off.32'] = (Image(GPath(
+        imgDirJn(u'checkbox_red_off_32.png')),PNG))
 
-    images['checkbox.green.on.16'] = (Image(GPath(bosh.dirs['images'].join(u'checkbox_green_on.png')),PNG))
-    images['checkbox.green.off.16'] = (Image(GPath(bosh.dirs['images'].join(u'checkbox_green_off.png')),PNG))
-    images['checkbox.green.on.24'] = (Image(GPath(bosh.dirs['images'].join(u'checkbox_green_on_24.png')),PNG))
-    images['checkbox.green.off.24'] = (Image(GPath(bosh.dirs['images'].join(u'checkbox_green_off_24.png')),PNG))
-    images['checkbox.green.on.32'] = (Image(GPath(bosh.dirs['images'].join(u'checkbox_green_on_32.png')),PNG))
-    images['checkbox.green.off.32'] = (Image(GPath(bosh.dirs['images'].join(u'checkbox_green_off_32.png')),PNG))
+    images['checkbox.green.on.16'] = (Image(GPath(
+        imgDirJn(u'checkbox_green_on.png')),PNG))
+    images['checkbox.green.off.16'] = (Image(GPath(
+        imgDirJn(u'checkbox_green_off.png')),PNG))
+    images['checkbox.green.on.24'] = (Image(GPath(
+        imgDirJn(u'checkbox_green_on_24.png')),PNG))
+    images['checkbox.green.off.24'] = (Image(GPath(
+        imgDirJn(u'checkbox_green_off_24.png')),PNG))
+    images['checkbox.green.on.32'] = (Image(GPath(
+        imgDirJn(u'checkbox_green_on_32.png')),PNG))
+    images['checkbox.green.off.32'] = (Image(GPath(
+        imgDirJn(u'checkbox_green_off_32.png')),PNG))
 
-    images['checkbox.blue.on.16'] = (Image(GPath(bosh.dirs['images'].join(u'checkbox_blue_on.png')),PNG))
-    images['checkbox.blue.on.24'] = (Image(GPath(bosh.dirs['images'].join(u'checkbox_blue_on_24.png')),PNG))
-    images['checkbox.blue.on.32'] = (Image(GPath(bosh.dirs['images'].join(u'checkbox_blue_on_32.png')),PNG))
-    images['checkbox.blue.off.16'] = (Image(GPath(bosh.dirs['images'].join(u'checkbox_blue_off.png')),PNG))
-    images['checkbox.blue.off.24'] = (Image(GPath(bosh.dirs['images'].join(u'checkbox_blue_off_24.png')),PNG))
-    images['checkbox.blue.off.32'] = (Image(GPath(bosh.dirs['images'].join(u'checkbox_blue_off_32.png')),PNG))
+    images['checkbox.blue.on.16'] = (Image(GPath(
+        imgDirJn(u'checkbox_blue_on.png')),PNG))
+    images['checkbox.blue.on.24'] = (Image(GPath(
+        imgDirJn(u'checkbox_blue_on_24.png')),PNG))
+    images['checkbox.blue.on.32'] = (Image(GPath(
+        imgDirJn(u'checkbox_blue_on_32.png')),PNG))
+    images['checkbox.blue.off.16'] = (Image(GPath(
+        imgDirJn(u'checkbox_blue_off.png')),PNG))
+    images['checkbox.blue.off.24'] = (Image(GPath(
+        imgDirJn(u'checkbox_blue_off_24.png')),PNG))
+    images['checkbox.blue.off.32'] = (Image(GPath(
+        imgDirJn(u'checkbox_blue_off_32.png')),PNG))
     #--Bash
-    images['bash.16'] = Image(GPath(bosh.dirs['images'].join(u'bash_16.png')),PNG)
-    images['bash.24'] = Image(GPath(bosh.dirs['images'].join(u'bash_24.png')),PNG)
-    images['bash.32'] = Image(GPath(bosh.dirs['images'].join(u'bash_32.png')),PNG)
-    images['bash.16.blue'] = Image(GPath(bosh.dirs['images'].join(u'bash_16_blue.png')),PNG)
-    images['bash.24.blue'] = Image(GPath(bosh.dirs['images'].join(u'bash_24_blue.png')),PNG)
-    images['bash.32.blue'] = Image(GPath(bosh.dirs['images'].join(u'bash_32_blue.png')),PNG)
+    images['bash.16'] = Image(GPath(imgDirJn(u'bash_16.png')),PNG)
+    images['bash.24'] = Image(GPath(imgDirJn(u'bash_24.png')),PNG)
+    images['bash.32'] = Image(GPath(imgDirJn(u'bash_32.png')),PNG)
+    images['bash.16.blue'] = Image(GPath(imgDirJn(u'bash_16_blue.png')),PNG)
+    images['bash.24.blue'] = Image(GPath(imgDirJn(u'bash_24_blue.png')),PNG)
+    images['bash.32.blue'] = Image(GPath(imgDirJn(u'bash_32_blue.png')),PNG)
     #--Bash Patch Dialogue
-    images['monkey.16'] = Image(GPath(bosh.dirs['images'].join(u'wryemonkey16.jpg')),JPEG)
+    images['monkey.16'] = Image(GPath(imgDirJn(u'wryemonkey16.jpg')),JPEG)
     #images['monkey.32'] = Image(GPath(bosh.dirs['images'].join(u'wryemonkey32.jpg')),JPEG)
     #--DocBrowser
-    images['doc.16'] = Image(GPath(bosh.dirs['images'].join(u'DocBrowser16.png')),PNG)
-    images['doc.24'] = Image(GPath(bosh.dirs['images'].join(u'DocBrowser24.png')),PNG)
-    images['doc.32'] = Image(GPath(bosh.dirs['images'].join(u'DocBrowser32.png')),PNG)
+    images['doc.16'] = Image(GPath(imgDirJn(u'DocBrowser16.png')),PNG)
+    images['doc.24'] = Image(GPath(imgDirJn(u'DocBrowser24.png')),PNG)
+    images['doc.32'] = Image(GPath(imgDirJn(u'DocBrowser32.png')),PNG)
     #--UAC icons
     #images['uac.small'] = Image(GPath(balt.getUACIcon('small')),ICO)
     #images['uac.large'] = Image(GPath(balt.getUACIcon('large')),ICO)
